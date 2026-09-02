@@ -1,0 +1,1466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRUTH - Animation & Mini Games</title>
+
+    <!-- Curvy cursive font + a handwritten font for letters/poems -->
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Caveat:wght@400;600;700&family=Dancing+Script:wght@400;600&display=swap" rel="stylesheet">
+
+    <style>
+        /* ===== SHARED STYLES ===== */
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background-color: #fff0f5;
+            font-family: 'Pacifico', cursive;
+            color: #ff7eb0;
+        }
+
+        /* Each full-screen section */
+        .section {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            text-align: center;
+        }
+
+        /* Section titles */
+        .game-title {
+            font-size: clamp(28px, 6vw, 48px);
+            color: #ffffff;
+            -webkit-text-stroke: 2px #ff9ec4;
+            text-shadow: 2px 2px 0 #ffc9dd;
+            margin-bottom: 20px;
+        }
+
+        /* Reusable cute button */
+        .btn {
+            font-family: 'Pacifico', cursive;
+            font-size: clamp(16px, 4vw, 22px);
+            color: #ffffff;
+            background-color: #ff9ec4;
+            border: none;
+            border-radius: 30px;
+            padding: 12px 28px;
+            margin: 8px;
+            cursor: pointer;
+            box-shadow: 3px 3px 0 #ffc9dd;
+            transition: transform 0.15s;
+        }
+        .btn:hover { transform: scale(1.05); }
+        .btn:active { transform: scale(0.97); }
+
+        /* Little scroll hint arrow */
+        .scroll-hint {
+            font-size: 40px;
+            color: #ff9ec4;
+            margin-top: 30px;
+            animation: bob 1.5s ease-in-out infinite;
+        }
+        @keyframes bob {
+            0%, 100% { transform: translateY(0); }
+            50%      { transform: translateY(12px); }
+        }
+
+        /* Info text shown inside games (scores etc.) */
+        .info {
+            font-size: clamp(18px, 4vw, 26px);
+            margin: 15px 0;
+            color: #ff7eb0;
+        }
+
+        /* ===== 1. HERO ANIMATION ===== */
+        .header {
+            font-size: clamp(28px, 7vw, 55px);
+            margin-bottom: 30px;
+            color: #ffffff;
+            -webkit-text-stroke: 2px #ff9ec4;
+            text-shadow: 2px 2px 0 #ffc9dd;
+            animation: sway 3.5s ease-in-out infinite;
+        }
+        .word {
+            position: relative;
+            display: flex;
+            font-size: clamp(60px, 16vw, 130px);
+        }
+        .letter {
+            display: inline-block;
+            width: clamp(42px, 11vw, 90px);
+            text-align: center;
+            color: #ffffff;
+            -webkit-text-stroke: 4px #ff9ec4;
+            text-shadow: 3px 3px 0 #ffc9dd;
+        }
+        .fixed { animation: gentleBounce 4s ease-in-out infinite; }
+        .m1 { animation: arcOverTop 4s ease-in-out infinite; }
+        .m2 { animation: middleHop 4s ease-in-out infinite; }
+        .m3 { animation: arcUnder 4s ease-in-out infinite; }
+
+        @keyframes sway {
+            0%, 100% { transform: translateY(0) rotate(-1deg); }
+            50%      { transform: translateY(-8px) rotate(1deg); }
+        }
+        @keyframes gentleBounce {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25%, 75% { transform: translateY(-10px) rotate(-3deg); }
+        }
+        @keyframes arcOverTop {
+            0%   { transform: translate(0, 0) rotate(0deg); }
+            15%  { transform: translate(100%, -110px) rotate(180deg); }
+            30%  { transform: translate(200%, 0) rotate(360deg); }
+            50%  { transform: translate(200%, 0) rotate(360deg); }
+            65%  { transform: translate(100%, -110px) rotate(180deg); }
+            80%  { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+        @keyframes arcUnder {
+            0%   { transform: translate(0, 0) rotate(0deg); }
+            15%  { transform: translate(-100%, 90px) rotate(-180deg); }
+            30%  { transform: translate(-200%, 0) rotate(-360deg); }
+            50%  { transform: translate(-200%, 0) rotate(-360deg); }
+            65%  { transform: translate(-100%, 90px) rotate(-180deg); }
+            80%  { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+        @keyframes middleHop {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            15%      { transform: translateY(-20px) rotate(10deg); }
+            30%      { transform: translateY(0) rotate(0deg); }
+            65%      { transform: translateY(-20px) rotate(-10deg); }
+            80%      { transform: translateY(0) rotate(0deg); }
+        }
+
+        /* ===== 1. WORD SCRAMBLE ===== */
+        #scrambleTiles {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .tile {
+            font-size: clamp(30px, 8vw, 60px);
+            width: clamp(50px, 13vw, 90px);
+            height: clamp(50px, 13vw, 90px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff;
+            color: #ff7eb0;
+            border: 3px solid #ff9ec4;
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 2px 2px 0 #ffc9dd;
+            user-select: none;
+        }
+        .tile.selected { background: #ffd6e6; }
+
+        /* ===== 2. BUBBLE POP ===== */
+        #bubbleArea {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            height: 400px;
+            background: #ffe4ee;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 3px solid #ff9ec4;
+        }
+        .bubble {
+            position: absolute;
+            bottom: -80px;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle at 30% 30%, #ffffff, #ff9ec4);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        /* ===== 3. MEMORY MATCH ===== */
+        #memoryGrid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            max-width: 400px;
+            width: 100%;
+            margin: 20px 0;
+        }
+        .card {
+            aspect-ratio: 1;
+            background: #ff9ec4;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(24px, 7vw, 40px);
+            cursor: pointer;
+            color: transparent;
+            box-shadow: 2px 2px 0 #ffc9dd;
+        }
+        .card.flipped { background: #ffffff; color: #ff7eb0; }
+        .card.matched { background: #ffe4ee; color: #ff7eb0; cursor: default; }
+
+        /* ===== 4. CATCH THE HEARTS ===== */
+        #catchArea {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            height: 400px;
+            background: #ffe4ee;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 3px solid #ff9ec4;
+        }
+        #basket {
+            position: absolute;
+            bottom: 10px;
+            font-size: 50px;
+            transform: translateX(-50%);
+        }
+        .fallingHeart {
+            position: absolute;
+            top: -40px;
+            font-size: 34px;
+        }
+
+        /* ===== 5. TAP THE HEART ===== */
+        #tapArea {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            height: 400px;
+            background: #ffe4ee;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 3px solid #ff9ec4;
+        }
+        #tapHeart {
+            position: absolute;
+            font-size: 50px;
+            cursor: pointer;
+            display: none;
+        }
+
+        /* ===== CELEBRATORY GAMES SHARED ===== */
+        .confetti-piece {
+            position: fixed;
+            width: 12px;
+            height: 12px;
+            top: -20px;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        /* ===== 7. TAP TO POP CONFETTI ===== */
+        #confettiMsg {
+            font-size: clamp(24px, 6vw, 40px);
+            color: #ff7eb0;
+            min-height: 50px;
+            margin-top: 15px;
+        }
+
+        /* ===== 8. SCRATCH CARD ===== */
+        #scratchWrap {
+            position: relative;
+            width: 300px;
+            height: 200px;
+            max-width: 90%;
+            margin: 20px 0;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 3px solid #ff9ec4;
+            box-shadow: 3px 3px 0 #ffc9dd;
+        }
+        #scratchReveal {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 15px;
+            font-size: clamp(22px, 5vw, 32px);
+            color: #ff7eb0;
+            background: #ffe4ee;
+        }
+        #scratchCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            touch-action: none;
+        }
+
+        /* ===== 9. SPIN THE WHEEL ===== */
+        #wheelWrap {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            max-width: 90%;
+            margin: 20px 0;
+        }
+        #wheelCanvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 6px solid #ff9ec4;
+            box-shadow: 3px 3px 0 #ffc9dd;
+            transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1);
+        }
+        #wheelPointer {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 40px;
+            z-index: 5;
+        }
+        #wheelMsg {
+            font-size: clamp(22px, 5vw, 32px);
+            min-height: 40px;
+            color: #ff7eb0;
+        }
+
+        /* ===== 10. CAKE CANDLE BLOW-OUT ===== */
+        #cake {
+            font-size: clamp(90px, 25vw, 160px);
+            cursor: pointer;
+            position: relative;
+            display: inline-block;
+            user-select: none;
+        }
+        #flame {
+            position: absolute;
+            top: -6%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: clamp(30px, 8vw, 55px);
+            animation: flicker 0.5s ease-in-out infinite alternate;
+        }
+        #flame.out { display: none; }
+        @keyframes flicker {
+            0%   { transform: translateX(-50%) scale(1) rotate(-3deg); opacity: 1; }
+            100% { transform: translateX(-50%) scale(1.15) rotate(3deg); opacity: 0.8; }
+        }
+        #cakeMsg {
+            font-size: clamp(22px, 5vw, 34px);
+            min-height: 40px;
+            color: #ff7eb0;
+        }
+
+        /* ===== 11. GIFT BOX UNWRAP ===== */
+        #gift {
+            font-size: clamp(90px, 25vw, 160px);
+            cursor: pointer;
+            display: inline-block;
+            user-select: none;
+        }
+        #gift.wiggle { animation: giftWiggle 0.4s ease-in-out; }
+        @keyframes giftWiggle {
+            0%, 100% { transform: rotate(0deg); }
+            25%      { transform: rotate(-10deg); }
+            75%      { transform: rotate(10deg); }
+        }
+        #giftMsg {
+            font-size: clamp(22px, 5vw, 34px);
+            min-height: 40px;
+            color: #ff7eb0;
+        }
+
+        /* ===== ENVELOPE SHARED ===== */
+        .envelope {
+            font-size: clamp(90px, 25vw, 150px);
+            cursor: pointer;
+            display: inline-block;
+            user-select: none;
+            transition: transform 0.15s;
+        }
+        .envelope:hover { transform: scale(1.05); }
+        .envelope.opened { animation: envPop 0.4s ease-in-out; }
+        @keyframes envPop {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            40%      { transform: scale(1.15) rotate(-4deg); }
+            70%      { transform: scale(1.1) rotate(4deg); }
+        }
+        .envelope-card {
+            max-width: 460px;
+            width: 92%;
+            margin: 20px auto 0;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: max-height 0.7s ease, opacity 0.7s ease;
+        }
+        .envelope-card.show {
+            max-height: 2000px;
+            opacity: 1;
+        }
+
+        /* ===== 12. LETTER: LINED NOTEPAPER ===== */
+        .letter-paper {
+            position: relative;
+            background: #fffdf7;
+            /* Horizontal ruled lines */
+            background-image: repeating-linear-gradient(
+                #fffdf7 0px,
+                #fffdf7 31px,
+                #cfe3f2 32px,
+                #cfe3f2 33px
+            );
+            border-radius: 8px;
+            box-shadow: 0 6px 20px rgba(255, 126, 176, 0.35);
+            padding: 30px 28px 30px 55px;
+            text-align: left;
+            overflow: hidden;
+        }
+        /* Red margin line down the left */
+        .letter-paper::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 42px;
+            width: 2px;
+            background: #ff9ec4;
+        }
+        /* Subtle coffee-stain ring doodle */
+        .letter-paper::after {
+            content: "";
+            position: absolute;
+            top: 18px;
+            right: 22px;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            border: 6px solid rgba(193, 154, 107, 0.18);
+            box-shadow: inset 0 0 8px rgba(193, 154, 107, 0.12);
+        }
+        .letter-handwriting {
+            font-family: 'Caveat', cursive;
+            font-size: clamp(22px, 5.5vw, 30px);
+            line-height: 32px; /* matches the ruled lines */
+            color: #4a6fa5;
+            white-space: pre-line;
+            position: relative;
+            z-index: 1;
+        }
+        .letter-heart {
+            font-family: 'Caveat', cursive;
+            font-size: 34px;
+            color: #ff7eb0;
+            text-align: right;
+            margin-top: 10px;
+        }
+
+        /* ===== 13. POEM GALLERY (10 themed papers) ===== */
+        #poemGalleryIntro .info { max-width: 500px; }
+
+        .poem-section {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+        }
+        /* Each poem paper starts hidden + slightly down, then eases in on scroll */
+        .poem-paper {
+            max-width: 480px;
+            width: 92%;
+            padding: 45px 40px;
+            text-align: center;
+            position: relative;
+            opacity: 0;
+            transform: translateY(60px);
+            transition: opacity 0.9s ease, transform 0.9s ease;
+        }
+        .poem-paper.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .poem-label {
+            font-family: 'Pacifico', cursive;
+            font-size: clamp(18px, 4vw, 24px);
+            margin-bottom: 15px;
+        }
+        .poem-body {
+            white-space: pre-line;
+            line-height: 1.9;
+        }
+
+        /* --- Theme A: Ancient Scroll (parchment, curled ends) --- */
+        .theme-scroll {
+            background: #f3e2c0;
+            background-image:
+                radial-gradient(circle at 20% 30%, rgba(160,120,60,0.12), transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(160,120,60,0.12), transparent 40%);
+            color: #5b4326;
+            border-radius: 6px;
+            box-shadow: 0 8px 24px rgba(91,67,38,0.35);
+            font-family: 'Dancing Script', cursive;
+            font-size: clamp(20px, 5vw, 28px);
+        }
+        .theme-scroll::before,
+        .theme-scroll::after {
+            content: "";
+            position: absolute;
+            left: -8px;
+            right: -8px;
+            height: 26px;
+            background: #d8b98a;
+            border-radius: 50%;
+            box-shadow: inset 0 0 10px rgba(91,67,38,0.4);
+        }
+        .theme-scroll::before { top: -13px; }
+        .theme-scroll::after  { bottom: -13px; }
+        .theme-scroll .poem-label { color: #7a5a30; }
+
+        /* --- Theme B: Handwritten Textured Paper (cream) --- */
+        .theme-handwritten {
+            background: #fffaf0;
+            background-image:
+                repeating-linear-gradient(0deg, rgba(0,0,0,0.02) 0 1px, transparent 1px 4px);
+            color: #6b5b73;
+            border-radius: 10px;
+            box-shadow: 0 6px 20px rgba(107,91,115,0.25);
+            font-family: 'Caveat', cursive;
+            font-size: clamp(24px, 6vw, 32px);
+            border: 1px solid #efe4d0;
+        }
+        .theme-handwritten .poem-label { color: #a58bb5; }
+
+        /* --- Theme C: Vintage Aged Letter (yellowed, soft edges) --- */
+        .theme-vintage {
+            background: #f7efd6;
+            background: linear-gradient(135deg, #f7efd6, #e9dab5);
+            color: #6a5533;
+            border-radius: 4px;
+            box-shadow: 0 8px 22px rgba(106,85,51,0.3);
+            font-family: 'Dancing Script', cursive;
+            font-size: clamp(22px, 5.5vw, 30px);
+            border: 1px solid #d8c69a;
+        }
+        .theme-vintage::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            box-shadow: inset 0 0 40px rgba(106,85,51,0.25);
+            border-radius: 4px;
+            pointer-events: none;
+        }
+        .theme-vintage .poem-label { color: #8a6d3b; }
+
+        /* --- Theme D: Soft Pink Note (on-brand) --- */
+        .theme-pink {
+            background: #ffe4ee;
+            color: #ff5f96;
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(255,126,176,0.35);
+            font-family: 'Caveat', cursive;
+            font-size: clamp(24px, 6vw, 32px);
+            border: 2px dashed #ff9ec4;
+        }
+        .theme-pink .poem-label { color: #ff7eb0; }
+
+        /* ===== 14. POLAROID CAROUSEL ===== */
+        .polaroid {
+            background: #ffffff;
+            padding: 14px 14px 55px;
+            border-radius: 4px;
+            box-shadow: 0 8px 22px rgba(0,0,0,0.18);
+            transform: rotate(-2deg);
+            width: 260px;
+            max-width: 80%;
+            margin: 0 auto;
+        }
+        .polaroid-photo {
+            position: relative;
+            width: 100%;
+            height: 220px;
+            background: #ffe4ee;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .polaroid-slide {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 70px;
+        }
+        .polaroid-slide.active { display: flex; }
+        .polaroid-slide img { width: 100%; height: 100%; object-fit: cover; }
+        .polaroid-caption {
+            font-family: 'Caveat', cursive;
+            font-size: 26px;
+            color: #6b5b73;
+            text-align: center;
+            margin-top: 12px;
+        }
+        .carousel-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        .carousel-dots {
+            margin-top: 12px;
+            font-size: 20px;
+            color: #ff9ec4;
+        }
+
+        /* ===== 6. QUIZ ===== */
+        #quizBox { max-width: 500px; width: 100%; }
+        .quiz-q { font-size: clamp(20px, 5vw, 30px); margin-bottom: 20px; color: #ff7eb0; }
+    </style>
+</head>
+<body>
+
+    <!-- ============ HERO SECTION (the animation) ============ -->
+    <div class="section">
+        <div class="header">Your Text Here</div>
+        <div class="word">
+            <span class="letter fixed">T</span>
+            <span class="letter m1">R</span>
+            <span class="letter m2">U</span>
+            <span class="letter m3">T</span>
+            <span class="letter fixed">H</span>
+        </div>
+        <div class="scroll-hint">&#8595;</div>
+    </div>
+
+    <!-- ============ GAME 1: WORD SCRAMBLE ============ -->
+    <div class="section">
+        <div class="game-title">Unscramble the Word</div>
+        <div class="info">Tap two tiles to swap them. Spell TRUTH!</div>
+        <div id="scrambleTiles"></div>
+        <div class="info" id="scrambleMsg"></div>
+        <button class="btn" onclick="setupScramble()">Shuffle Again</button>
+        <div class="scroll-hint">&#8595;</div>
+    </div>
+
+    <!-- ============ GAME 2: BUBBLE POP ============ -->
+    <div class="section">
+        <div class="game-title">Bubble Pop</div>
+        <div class="info">Popped: <span id="bubbleScore">0</span></div>
+        <div id="bubbleArea"></div>
+        <button class="btn" onclick="startBubbles()">Start / Restart</button>
+        <div class="scroll-hint">&#8595;</div>
+    </div>
+
+    <!-- ============ GAME 3: MEMORY MATCH ============ -->
+    <div class="section">
+        <div class="game-title">Memory Match</div>
+        <div class="info">Find all the matching pairs!</div>
+        <div id="memoryGrid"></div>
+        <div class="info" id="memoryMsg"></div>
+        <button class="btn" onclick="setupMemory()">New Game</button>
+        <div class="scroll-hint">&#8595;</div>
+    </div>
+
+    <!-- ============ GAME 4: CATCH THE HEARTS ============ -->
+    <div class="section">
+        <div class="game-title">Catch the Hearts</div>
+        <div class="info">Move your mouse/finger to catch. Caught: <span id="catchScore">0</span></div>
+        <div id="catchArea"><div id="basket">&#129528;</div></div>
+        <button class="btn" onclick="startCatch()">Start / Restart</button>
+        <div class="scroll-hint">&#8595;</div>
+    </div>
+
+    <!-- ============ GAME 5: TAP THE HEART ============ -->
+    <div class="section">
+        <div class="game-title">Tap the Heart</div>
+        <div class="info">Time: <span id="tapTime">15</span> | Score: <span id="tapScore">0</span></div>
+        <div id="tapArea"><div id="tapHeart">&#128149;</div></div>
+        <button class="btn" onclick="startTap()">Start / Restart</button>
+        <div class="scroll-hint">&#8595;</div>
+    </div>
+
+    <!-- ============ GAME 7: TAP TO POP CONFETTI ============ -->
+    <div class="section">
+        <div class="game-title">Tap to Celebrate</div>
+        <div class="info">Tap the button for a burst of confetti!</div>
+        <button class="btn" onclick="popConfetti()">Celebrate! &#127881;</button>
+        <!-- CHANGE YOUR CONFETTI MESSAGE HERE -->
+        <div id="confettiMsg"></div>
+        <div class="scroll-hint">&#8595;</div>
+    </div>
+
+    <!-- ============ GAME 8: SCRATCH CARD ============ -->
+    <div class="section">
+        <div class="game-title">Scratch to Reveal</div>
+        <div class="info">Scratch the pink area with your finger or mouse!</div>
+        <div id="scratchWrap">
+            <!-- CHANGE YOUR SCRATCH-CARD MESSAGE HERE -->
+            <div id="scratchReveal">You're Amazing! &#128150;</div>
+            <canvas id="scratchCanvas"></canvas>
+        </div>
+        <button class="btn" onclick="resetScratch()">Reset Card</button>
+        <div class="scroll-hint">&#8595;</div>
+    </div>
+
+    <!-- ============ GAME 9: SPIN THE WHEEL ============ -->
+    <div class="section">
+        <div class="game-title">Spin the Wheel</div>
+        <div class="info">Tap Spin and see where it lands!</div>
+        <div id="wheelWrap">
+            <div id="wheelPointer">&#128071;</div>
+            <canvas id="wheelCanvas" width="300" height="300"></canvas>
+        </div>
+        <div id="wheelMsg"></div>
+        <button class="btn" onclick="spinWheel()">Spin!</button>
+        <div class="scroll-hint">&#8595;</div>
+    </div>
+
+    <!-- ============ GAME 10: CAKE CANDLE BLOW-OUT ============ -->
+    <div class="section">
+        <div class="game-title">Blow Out the Candles</div>
+        <div class="info">Tap the cake to blow out the candles!</div>
+        <div id="cake">
+            &#127874;
+            <span id="flame">&#128293;</span>
+        </div>
+        <!-- CHANGE YOUR CAKE MESSAGE HERE -->
+        <div id="cakeMsg"></div>
+        <button class="btn" onclick="relightCandles()">Light Again</button>
+        <div class="scroll-hint">&#8595;</div>
+    </div>
+
+    <!-- ============ GAME 11: GIFT BOX UNWRAP ============ -->
+    <div class="section">
+        <div class="game-title">Open Your Gift</div>
+        <div class="info">Tap the gift to unwrap your surprise!</div>
+        <div id="gift">&#127873;</div>
+        <!-- CHANGE YOUR GIFT MESSAGE HERE -->
+        <div id="giftMsg"></div>
+        <button class="btn" onclick="resetGift()">Wrap Again</button>
+        <div class="scroll-hint">&#8595;</div>
+    </div>
+
+    <!-- ============ ENVELOPE 12: LETTER (lined notepaper) ============ -->
+    <div class="section">
+        <div class="game-title">A Letter for You</div>
+        <div class="info">Tap the envelope to open your letter!</div>
+        <div class="envelope" id="letterEnvelope" onclick="openLetter()">&#9993;&#65039;</div>
+        <div class="envelope-card" id="letterCard">
+            <div class="letter-paper">
+                <!-- CHANGE YOUR LETTER TEXT HERE (press Enter for new lines) -->
+                <div class="letter-handwriting">Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+Ut enim ad minim veniam, quis nostrud exercitation ullamco.
+Duis aute irure dolor in reprehenderit in voluptate velit esse.</div>
+                <div class="letter-heart">With love &#128150;</div>
+            </div>
+        </div>
+        <div class="scroll-hint">&#8595;</div>
+    </div>
+
+    <!-- ============ POEM GALLERY: INTRO ============ -->
+    <div class="section" id="poemGalleryIntro">
+        <div class="game-title">The Poem Gallery</div>
+        <div class="info">Scroll gently through ten poems, each on its own paper. Keep scrolling...</div>
+        <div class="scroll-hint">&#8595;</div>
+    </div>
+
+    <!--
+        POEM GALLERY: 10 poems, each in its own scroll section.
+        To edit a poem, change the text inside its <div class="poem-body"> ... </div>.
+        The paper style is set by the theme class (theme-scroll / theme-handwritten /
+        theme-vintage / theme-pink) on the poem-paper div. You can mix and match them.
+    -->
+
+    <!-- Poem 1 -->
+    <div class="poem-section">
+        <div class="poem-paper theme-scroll">
+            <div class="poem-label">~ Poem One ~</div>
+            <div class="poem-body">Lorem ipsum dolor sit amet,
+consectetur adipiscing elit,
+sed do eiusmod tempor,
+incididunt ut labore.</div>
+        </div>
+    </div>
+
+    <!-- Poem 2 -->
+    <div class="poem-section">
+        <div class="poem-paper theme-handwritten">
+            <div class="poem-label">~ Poem Two ~</div>
+            <div class="poem-body">Ut enim ad minim veniam,
+quis nostrud exercitation,
+ullamco laboris nisi,
+ut aliquip ex ea commodo.</div>
+        </div>
+    </div>
+
+    <!-- Poem 3 -->
+    <div class="poem-section">
+        <div class="poem-paper theme-vintage">
+            <div class="poem-label">~ Poem Three ~</div>
+            <div class="poem-body">Duis aute irure dolor,
+in reprehenderit in voluptate,
+velit esse cillum dolore,
+eu fugiat nulla pariatur.</div>
+        </div>
+    </div>
+
+    <!-- Poem 4 -->
+    <div class="poem-section">
+        <div class="poem-paper theme-pink">
+            <div class="poem-label">~ Poem Four ~</div>
+            <div class="poem-body">Excepteur sint occaecat,
+cupidatat non proident,
+sunt in culpa qui officia,
+deserunt mollit anim.</div>
+        </div>
+    </div>
+
+    <!-- Poem 5 -->
+    <div class="poem-section">
+        <div class="poem-paper theme-scroll">
+            <div class="poem-label">~ Poem Five ~</div>
+            <div class="poem-body">Sed ut perspiciatis unde,
+omnis iste natus error,
+sit voluptatem accusantium,
+doloremque laudantium.</div>
+        </div>
+    </div>
+
+    <!-- Poem 6 -->
+    <div class="poem-section">
+        <div class="poem-paper theme-handwritten">
+            <div class="poem-label">~ Poem Six ~</div>
+            <div class="poem-body">Totam rem aperiam,
+eaque ipsa quae ab illo,
+inventore veritatis et quasi,
+architecto beatae vitae.</div>
+        </div>
+    </div>
+
+    <!-- Poem 7 -->
+    <div class="poem-section">
+        <div class="poem-paper theme-vintage">
+            <div class="poem-label">~ Poem Seven ~</div>
+            <div class="poem-body">Nemo enim ipsam voluptatem,
+quia voluptas sit aspernatur,
+aut odit aut fugit,
+sed quia consequuntur.</div>
+        </div>
+    </div>
+
+    <!-- Poem 8 -->
+    <div class="poem-section">
+        <div class="poem-paper theme-pink">
+            <div class="poem-label">~ Poem Eight ~</div>
+            <div class="poem-body">Neque porro quisquam est,
+qui dolorem ipsum quia,
+dolor sit amet consectetur,
+adipisci velit sed quia.</div>
+        </div>
+    </div>
+
+    <!-- Poem 9 -->
+    <div class="poem-section">
+        <div class="poem-paper theme-scroll">
+            <div class="poem-label">~ Poem Nine ~</div>
+            <div class="poem-body">Quis autem vel eum iure,
+reprehenderit qui in ea,
+voluptate velit esse quam,
+nihil molestiae consequatur.</div>
+        </div>
+    </div>
+
+    <!-- Poem 10 -->
+    <div class="poem-section">
+        <div class="poem-paper theme-vintage">
+            <div class="poem-label">~ Poem Ten ~</div>
+            <div class="poem-body">At vero eos et accusamus,
+et iusto odio dignissimos,
+ducimus qui blanditiis,
+praesentium voluptatum.</div>
+        </div>
+        <div class="scroll-hint">&#8595;</div>
+    </div>
+
+    <!-- ============ ENVELOPE 14: POLAROID CAROUSEL ============ -->
+    <div class="section">
+        <div class="game-title">A Little Gallery</div>
+        <div class="info">Tap the envelope to open the polaroid album!</div>
+        <div class="envelope" id="carouselEnvelope" onclick="openCarousel()">&#9993;&#65039;</div>
+        <div class="envelope-card" id="carouselCard">
+            <div class="polaroid">
+                <div class="polaroid-photo" id="polaroidFrame">
+                    <!--
+                        CHANGE YOUR POLAROID SLIDES HERE.
+                        For a real PHOTO, replace the emoji inside a slide with:
+                        <img src="your-photo-link-here.jpg" alt="">
+                        Keep class="polaroid-slide" on each; the first also has "active".
+                    -->
+                    <div class="polaroid-slide active">&#128247;</div>
+                    <div class="polaroid-slide">&#127875;</div>
+                    <div class="polaroid-slide">&#127881;</div>
+                </div>
+                <!-- CHANGE THE POLAROID CAPTION HERE -->
+                <div class="polaroid-caption" id="polaroidCaption">A sweet memory</div>
+            </div>
+            <div class="carousel-controls">
+                <button class="btn" onclick="carouselPrev()">&#8592;</button>
+                <button class="btn" onclick="carouselNext()">&#8594;</button>
+            </div>
+            <div class="carousel-dots" id="carouselDots"></div>
+        </div>
+        <div class="scroll-hint">&#8595;</div>
+    </div>
+
+    <!-- ============ GAME 6: QUIZ ============ -->
+    <div class="section">
+        <div class="game-title">Fun Quiz</div>
+        <div id="quizBox">
+            <div class="quiz-q" id="quizQuestion"></div>
+            <div id="quizOptions"></div>
+            <div class="info" id="quizMsg"></div>
+        </div>
+    </div>
+
+    <script>
+    /* ================= GAME 1: WORD SCRAMBLE ================= */
+    const targetWord = "TRUTH";
+    let firstTile = null;
+
+    function setupScramble() {
+        const container = document.getElementById("scrambleTiles");
+        const msg = document.getElementById("scrambleMsg");
+        msg.textContent = "";
+        let letters = targetWord.split("");
+        do {
+            letters.sort(() => Math.random() - 0.5);
+        } while (letters.join("") === targetWord);
+
+        container.innerHTML = "";
+        letters.forEach((ch) => {
+            const tile = document.createElement("div");
+            tile.className = "tile";
+            tile.textContent = ch;
+            tile.onclick = () => selectTile(tile);
+            container.appendChild(tile);
+        });
+        firstTile = null;
+    }
+
+    function selectTile(tile) {
+        if (firstTile === null) {
+            firstTile = tile;
+            tile.classList.add("selected");
+        } else {
+            const temp = firstTile.textContent;
+            firstTile.textContent = tile.textContent;
+            tile.textContent = temp;
+            firstTile.classList.remove("selected");
+            firstTile = null;
+            checkScramble();
+        }
+    }
+
+    function checkScramble() {
+        const tiles = document.querySelectorAll("#scrambleTiles .tile");
+        let current = "";
+        tiles.forEach(t => current += t.textContent);
+        if (current === targetWord) {
+            document.getElementById("scrambleMsg").textContent = "You did it! 🎉";
+        }
+    }
+
+    /* ================= GAME 2: BUBBLE POP ================= */
+    let bubbleTimer = null;
+    let bubbleScore = 0;
+
+    function startBubbles() {
+        const area = document.getElementById("bubbleArea");
+        area.innerHTML = "";
+        bubbleScore = 0;
+        document.getElementById("bubbleScore").textContent = "0";
+        if (bubbleTimer) clearInterval(bubbleTimer);
+        bubbleTimer = setInterval(makeBubble, 800);
+    }
+
+    function makeBubble() {
+        const area = document.getElementById("bubbleArea");
+        const bubble = document.createElement("div");
+        bubble.className = "bubble";
+        const size = 40 + Math.random() * 40;
+        bubble.style.width = size + "px";
+        bubble.style.height = size + "px";
+        bubble.style.left = Math.random() * (area.clientWidth - size) + "px";
+        const duration = 4 + Math.random() * 3;
+        bubble.style.transition = "bottom " + duration + "s linear";
+        area.appendChild(bubble);
+        requestAnimationFrame(() => { bubble.style.bottom = area.clientHeight + 80 + "px"; });
+        bubble.onclick = () => {
+            bubbleScore++;
+            document.getElementById("bubbleScore").textContent = bubbleScore;
+            bubble.remove();
+        };
+        setTimeout(() => bubble.remove(), duration * 1000);
+    }
+
+    /* ================= GAME 3: MEMORY MATCH ================= */
+    const memoryIcons = ["🌸","💖","🎀","🦄","🍓","⭐","🐰","🌷"];
+    let memFirst = null, memLock = false, memMatched = 0;
+
+    function setupMemory() {
+        const grid = document.getElementById("memoryGrid");
+        document.getElementById("memoryMsg").textContent = "";
+        memFirst = null; memLock = false; memMatched = 0;
+        let deck = [...memoryIcons, ...memoryIcons];
+        deck.sort(() => Math.random() - 0.5);
+        grid.innerHTML = "";
+        deck.forEach(icon => {
+            const card = document.createElement("div");
+            card.className = "card";
+            card.dataset.icon = icon;
+            card.onclick = () => flipCard(card);
+            grid.appendChild(card);
+        });
+    }
+
+    function flipCard(card) {
+        if (memLock || card.classList.contains("flipped") || card.classList.contains("matched")) return;
+        card.classList.add("flipped");
+        card.textContent = card.dataset.icon;
+        if (memFirst === null) {
+            memFirst = card;
+        } else {
+            if (memFirst.dataset.icon === card.dataset.icon) {
+                memFirst.classList.add("matched");
+                card.classList.add("matched");
+                memFirst = null;
+                memMatched++;
+                if (memMatched === memoryIcons.length) {
+                    document.getElementById("memoryMsg").textContent = "All matched! 🎉";
+                }
+            } else {
+                memLock = true;
+                const prev = memFirst;
+                setTimeout(() => {
+                    prev.classList.remove("flipped"); prev.textContent = "";
+                    card.classList.remove("flipped"); card.textContent = "";
+                    memFirst = null; memLock = false;
+                }, 800);
+            }
+        }
+    }
+
+    /* ================= GAME 4: CATCH THE HEARTS ================= */
+    let catchScore = 0, catchTimer = null, catchInterval = null;
+
+    function startCatch() {
+        const area = document.getElementById("catchArea");
+        area.querySelectorAll(".fallingHeart").forEach(h => h.remove());
+        catchScore = 0;
+        document.getElementById("catchScore").textContent = "0";
+        if (catchInterval) clearInterval(catchInterval);
+        catchInterval = setInterval(makeFallingHeart, 1000);
+    }
+
+    (function () {
+        const area = document.getElementById("catchArea");
+        const basket = document.getElementById("basket");
+        function moveBasket(x) {
+            const rect = area.getBoundingClientRect();
+            let pos = x - rect.left;
+            pos = Math.max(25, Math.min(area.clientWidth - 25, pos));
+            basket.style.left = pos + "px";
+        }
+        area.addEventListener("mousemove", e => moveBasket(e.clientX));
+        area.addEventListener("touchmove", e => { moveBasket(e.touches[0].clientX); }, {passive:true});
+    })();
+
+    function makeFallingHeart() {
+        const area = document.getElementById("catchArea");
+        const heart = document.createElement("div");
+        heart.className = "fallingHeart";
+        heart.textContent = "💗";
+        const x = 20 + Math.random() * (area.clientWidth - 40);
+        heart.style.left = x + "px";
+        area.appendChild(heart);
+        let top = -40;
+        const fall = setInterval(() => {
+            top += 5;
+            heart.style.top = top + "px";
+            const basket = document.getElementById("basket");
+            const basketX = parseFloat(basket.style.left || area.clientWidth/2);
+            if (top > area.clientHeight - 70 && Math.abs(x - basketX) < 45) {
+                catchScore++;
+                document.getElementById("catchScore").textContent = catchScore;
+                heart.remove(); clearInterval(fall);
+            } else if (top > area.clientHeight) {
+                heart.remove(); clearInterval(fall);
+            }
+        }, 30);
+    }
+
+    /* ================= GAME 5: TAP THE HEART ================= */
+    let tapScore = 0, tapTimeLeft = 15, tapCountdown = null;
+
+    function startTap() {
+        tapScore = 0; tapTimeLeft = 15;
+        document.getElementById("tapScore").textContent = "0";
+        document.getElementById("tapTime").textContent = "15";
+        const heart = document.getElementById("tapHeart");
+        heart.style.display = "block";
+        moveTapHeart();
+        if (tapCountdown) clearInterval(tapCountdown);
+        tapCountdown = setInterval(() => {
+            tapTimeLeft--;
+            document.getElementById("tapTime").textContent = tapTimeLeft;
+            if (tapTimeLeft <= 0) {
+                clearInterval(tapCountdown);
+                heart.style.display = "none";
+            }
+        }, 1000);
+    }
+
+    function moveTapHeart() {
+        const area = document.getElementById("tapArea");
+        const heart = document.getElementById("tapHeart");
+        const x = Math.random() * (area.clientWidth - 60);
+        const y = Math.random() * (area.clientHeight - 60);
+        heart.style.left = x + "px";
+        heart.style.top = y + "px";
+    }
+
+    document.getElementById("tapHeart").onclick = function () {
+        if (tapTimeLeft <= 0) return;
+        tapScore++;
+        document.getElementById("tapScore").textContent = tapScore;
+        moveTapHeart();
+    };
+
+    /* ================= SHARED: CONFETTI HELPER ================= */
+    function launchConfetti(count) {
+        const colors = ["#ff9ec4", "#ffc9dd", "#ff7eb0", "#ffe4ee", "#ffffff", "#ffd6e6"];
+        for (let i = 0; i < count; i++) {
+            const piece = document.createElement("div");
+            piece.className = "confetti-piece";
+            piece.style.left = Math.random() * 100 + "vw";
+            piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+            piece.style.borderRadius = Math.random() < 0.5 ? "50%" : "2px";
+            const size = 8 + Math.random() * 8;
+            piece.style.width = size + "px";
+            piece.style.height = size + "px";
+            document.body.appendChild(piece);
+
+            const fallTime = 2000 + Math.random() * 2000;
+            const drift = (Math.random() - 0.5) * 200;
+            piece.animate([
+                { transform: "translate(0, 0) rotate(0deg)", opacity: 1 },
+                { transform: "translate(" + drift + "px, 100vh) rotate(" + (Math.random()*720) + "deg)", opacity: 1 }
+            ], { duration: fallTime, easing: "ease-in" });
+
+            setTimeout(() => piece.remove(), fallTime);
+        }
+    }
+
+    /* ================= GAME 7: TAP TO POP CONFETTI ================= */
+    function popConfetti() {
+        launchConfetti(80);
+        // CHANGE YOUR CONFETTI MESSAGE HERE
+        document.getElementById("confettiMsg").textContent = "Hooray! 🎉";
+    }
+
+    /* ================= GAME 8: SCRATCH CARD ================= */
+    let scratchCtx, scratchCleared = false;
+
+    function setupScratch() {
+        const canvas = document.getElementById("scratchCanvas");
+        const wrap = document.getElementById("scratchWrap");
+        canvas.width = wrap.clientWidth;
+        canvas.height = wrap.clientHeight;
+        scratchCtx = canvas.getContext("2d");
+        scratchCleared = false;
+
+        scratchCtx.globalCompositeOperation = "source-over";
+        scratchCtx.fillStyle = "#ff9ec4";
+        scratchCtx.fillRect(0, 0, canvas.width, canvas.height);
+        scratchCtx.fillStyle = "#ffffff";
+        scratchCtx.font = "20px Pacifico, cursive";
+        scratchCtx.textAlign = "center";
+        scratchCtx.fillText("Scratch here!", canvas.width / 2, canvas.height / 2);
+
+        scratchCtx.globalCompositeOperation = "destination-out";
+    }
+
+    function scratchAt(x, y) {
+        if (!scratchCtx) return;
+        scratchCtx.beginPath();
+        scratchCtx.arc(x, y, 20, 0, Math.PI * 2);
+        scratchCtx.fill();
+        checkScratch();
+    }
+
+    function checkScratch() {
+        if (scratchCleared) return;
+        const canvas = document.getElementById("scratchCanvas");
+        const data = scratchCtx.getImageData(0, 0, canvas.width, canvas.height).data;
+        let clear = 0;
+        for (let i = 3; i < data.length; i += 40) {
+            if (data[i] === 0) clear++;
+        }
+        const total = data.length / 40;
+        if (clear / total > 0.5) {
+            scratchCleared = true;
+            scratchCtx.clearRect(0, 0, canvas.width, canvas.height);
+            launchConfetti(40);
+        }
+    }
+
+    (function () {
+        const canvas = document.getElementById("scratchCanvas");
+        let drawing = false;
+        function pos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const p = e.touches ? e.touches[0] : e;
+            return { x: p.clientX - rect.left, y: p.clientY - rect.top };
+        }
+        canvas.addEventListener("mousedown", () => drawing = true);
+        canvas.addEventListener("mouseup", () => drawing = false);
+        canvas.addEventListener("mouseleave", () => drawing = false);
+        canvas.addEventListener("mousemove", e => { if (drawing) { const c = pos(e); scratchAt(c.x, c.y); } });
+        canvas.addEventListener("touchstart", e => { const c = pos(e); scratchAt(c.x, c.y); }, {passive:true});
+        canvas.addEventListener("touchmove", e => { const c = pos(e); scratchAt(c.x, c.y); }, {passive:true});
+    })();
+
+    function resetScratch() {
+        setupScratch();
+    }
+
+    /* ================= GAME 9: SPIN THE WHEEL ================= */
+    // CHANGE YOUR WHEEL MESSAGES HERE (keep 6 for a nice even wheel)
+    const wheelSegments = ["You Rock!", "Celebrate!", "Best Wishes!", "You're Amazing!", "Big Smile!", "Cheers!"];
+    const wheelColors = ["#ff9ec4", "#ffc9dd", "#ff7eb0", "#ffd6e6", "#ffb3d1", "#ffe4ee"];
+    let wheelAngle = 0, wheelSpinning = false;
+
+    function drawWheel() {
+        const canvas = document.getElementById("wheelCanvas");
+        const ctx = canvas.getContext("2d");
+        const n = wheelSegments.length;
+        const arc = (Math.PI * 2) / n;
+        const cx = canvas.width / 2, cy = canvas.height / 2, r = canvas.width / 2;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let i = 0; i < n; i++) {
+            const start = i * arc;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.arc(cx, cy, r, start, start + arc);
+            ctx.closePath();
+            ctx.fillStyle = wheelColors[i % wheelColors.length];
+            ctx.fill();
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(start + arc / 2);
+            ctx.textAlign = "right";
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "16px Pacifico, cursive";
+            ctx.fillText(wheelSegments[i], r - 15, 6);
+            ctx.restore();
+        }
+    }
+
+    function spinWheel() {
+        if (wheelSpinning) return;
+        wheelSpinning = true;
+        document.getElementById("wheelMsg").textContent = "";
+        const canvas = document.getElementById("wheelCanvas");
+        const n = wheelSegments.length;
+        const extraSpins = 5;
+        const randomAngle = Math.random() * 360;
+        const totalRotation = extraSpins * 360 + randomAngle;
+        wheelAngle += totalRotation;
+        canvas.style.transform = "rotate(" + wheelAngle + "deg)";
+
+        setTimeout(() => {
+            const normalized = wheelAngle % 360;
+            const pointerAngle = (270 - normalized + 360) % 360;
+            const index = Math.floor(pointerAngle / (360 / n)) % n;
+            document.getElementById("wheelMsg").textContent = wheelSegments[index] + " 🎉";
+            launchConfetti(50);
+            wheelSpinning = false;
+        }, 4200);
+    }
+
+    /* ================= GAME 10: CAKE CANDLE BLOW-OUT ================= */
+    document.getElementById("cake").onclick = function () {
+        const flame = document.getElementById("flame");
+        if (flame.classList.contains("out")) return;
+        flame.classList.add("out");
+        // CHANGE YOUR CAKE MESSAGE HERE
+        document.getElementById("cakeMsg").textContent = "Make a wish! 🎂";
+        launchConfetti(80);
+    };
+
+    function relightCandles() {
+        document.getElementById("flame").classList.remove("out");
+        document.getElementById("cakeMsg").textContent = "";
+    }
+
+    /* ================= GAME 11: GIFT BOX UNWRAP ================= */
+    let giftOpened = false;
+    document.getElementById("gift").onclick = function () {
+        if (giftOpened) return;
+        const gift = this;
+        gift.classList.add("wiggle");
+        setTimeout(() => {
+            gift.classList.remove("wiggle");
+            gift.textContent = "🎉";
+            giftOpened = true;
+            // CHANGE YOUR GIFT MESSAGE HERE
+            document.getElementById("giftMsg").textContent = "Surprise! You're wonderful! 💝";
+            launchConfetti(80);
+        }, 500);
+    };
+
+    function resetGift() {
+        giftOpened = false;
+        document.getElementById("gift").textContent = "🎁";
+        document.getElementById("giftMsg").textContent = "";
+    }
+
+    /* ================= ENVELOPE 12: LETTER ================= */
+    function openLetter() {
+        const card = document.getElementById("letterCard");
+        const env = document.getElementById("letterEnvelope");
+        card.classList.toggle("show");
+        if (card.classList.contains("show")) {
+            env.classList.remove("opened");
+            void env.offsetWidth;
+            env.classList.add("opened");
+            launchConfetti(30);
+        }
+    }
+
+    /* ================= POEM GALLERY: SCROLL REVEAL ================= */
+    (function () {
+        const papers = document.querySelectorAll(".poem-paper");
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add("visible");
+                } else {
+                    entry.target.classList.remove("visible");
+                }
+            });
+        }, { threshold: 0.35 });
+        papers.forEach(p => observer.observe(p));
+    })();
+
+    /* ================= ENVELOPE 14: POLAROID CAROUSEL ================= */
+    let carouselIndex = 0;
+    // CHANGE THE POLAROID CAPTIONS HERE (one per slide, in order)
+    const polaroidCaptions = ["A sweet memory", "Good times", "Celebrate!"];
+
+    function openCarousel() {
+        const card = document.getElementById("carouselCard");
+        const env = document.getElementById("carouselEnvelope");
+        card.classList.toggle("show");
+        if (card.classList.contains("show")) {
+            env.classList.remove("opened");
+            void env.offsetWidth;
+            env.classList.add("opened");
+            launchConfetti(30);
+            updateCarousel();
+        }
+    }
+
+    function updateCarousel() {
+        const slides = document.querySelectorAll("#polaroidFrame .polaroid-slide");
+        slides.forEach((slide, i) => {
+            slide.classList.toggle("active", i === carouselIndex);
+        });
+        const caption = document.getElementById("polaroidCaption");
+        if (polaroidCaptions[carouselIndex]) caption.textContent = polaroidCaptions[carouselIndex];
+        const dots = document.getElementById("carouselDots");
+        let dotStr = "";
+        for (let i = 0; i < slides.length; i++) {
+            dotStr += (i === carouselIndex) ? "●" : "○";
+        }
+        dots.textContent = dotStr;
+    }
+
+    function carouselNext() {
+        const slides = document.querySelectorAll("#polaroidFrame .polaroid-slide");
+        carouselIndex = (carouselIndex + 1) % slides.length;
+        updateCarousel();
+    }
+
+    function carouselPrev() {
+        const slides = document.querySelectorAll("#polaroidFrame .polaroid-slide");
+        carouselIndex = (carouselIndex - 1 + slides.length) % slides.length;
+        updateCarousel();
+    }
+
+    /* ================= GAME 6: QUIZ ================= */
+    const quizData = [
+        { q: "Which planet is known as the Red Planet?", options: ["Mars","Venus","Jupiter"], answer: "Mars" },
+        { q: "How many colors are in a rainbow?", options: ["5","7","9"], answer: "7" },
+        { q: "What is the opposite of 'truth'?", options: ["Lie","Fact","Real"], answer: "Lie" }
+    ];
+    let quizIndex = 0, quizScore = 0;
+
+    function showQuiz() {
+        const qEl = document.getElementById("quizQuestion");
+        const optEl = document.getElementById("quizOptions");
+        const msg = document.getElementById("quizMsg");
+        if (quizIndex >= quizData.length) {
+            qEl.textContent = "";
+            optEl.innerHTML = "";
+            msg.textContent = "Your score: " + quizScore + " / " + quizData.length + " 🎉";
+            const again = document.createElement("button");
+            again.className = "btn";
+            again.textContent = "Play Again";
+            again.onclick = () => { quizIndex = 0; quizScore = 0; msg.textContent = ""; showQuiz(); };
+            optEl.appendChild(again);
+            return;
+        }
+        const current = quizData[quizIndex];
+        qEl.textContent = current.q;
+        optEl.innerHTML = "";
+        msg.textContent = "";
+        current.options.forEach(opt => {
+            const b = document.createElement("button");
+            b.className = "btn";
+            b.textContent = opt;
+            b.onclick = () => {
+                if (opt === current.answer) { quizScore++; msg.textContent = "Correct! 💕"; }
+                else { msg.textContent = "Oops! The answer was " + current.answer; }
+                quizIndex++;
+                setTimeout(showQuiz, 1000);
+            };
+            optEl.appendChild(b);
+        });
+    }
+
+    /* ================= START EVERYTHING ================= */
+    setupScramble();
+    startBubbles();
+    setupMemory();
+    startCatch();
+    setupScratch();
+    drawWheel();
+    updateCarousel();
+    showQuiz();
+    // Tap game waits for the user to press Start
+    </script>
+
+</body>
+</html>
